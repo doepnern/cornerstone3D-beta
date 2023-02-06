@@ -60,6 +60,7 @@ interface ToolConfiguration {
     getReferenceLineDraggableRotatable?: (viewportId: string) => boolean;
     getReferenceLineSlabThicknessControlsOn?: (viewportId: string) => boolean;
     shadow?: boolean;
+    initialFocalPoint?: Types.Point3;
   };
 }
 
@@ -246,6 +247,14 @@ class CrosshairsTool extends AnnotationTool {
     this._subscribeToViewportNewVolumeSet(viewportsInfo);
 
     this.computeToolCenter(viewportsInfo);
+    if (this.configuration?.initialFocalPoint) {
+      const enabledElements = viewportsInfo.map((e) =>
+        getEnabledElementByIds(e.viewportId, e.renderingEngineId)
+      );
+      enabledElements.forEach((enabledElement) => {
+        this._jump(enabledElement, this.configuration.initialFocalPoint);
+      });
+    }
   }
 
   onSetToolPassive() {
