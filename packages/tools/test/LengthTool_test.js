@@ -1,6 +1,7 @@
 import * as cornerstone3D from '@cornerstonejs/core';
 import * as csTools3d from '../src/index';
 import * as testUtils from '../../../utils/test/testUtils';
+import { performMouseDownAndUp } from '../../../utils/test/testUtilsMouseEvents';
 
 const {
   cache,
@@ -245,7 +246,7 @@ describe('LengthTool:', () => {
           const lengthAnnotation = lengthAnnotations[0];
           expect(lengthAnnotation.metadata.toolName).toBe(LengthTool.toolName);
           expect(lengthAnnotation.invalidated).toBe(false);
-          expect(lengthAnnotation.highlighted).toBe(false);
+          expect(lengthAnnotation.highlighted).toBe(true);
 
           const data = lengthAnnotation.data.cachedStats;
           const targets = Array.from(Object.keys(data));
@@ -359,7 +360,7 @@ describe('LengthTool:', () => {
           expect(lengthAnnotation.metadata.referencedImageId).toBe(imageId1);
           expect(lengthAnnotation.metadata.toolName).toBe(LengthTool.toolName);
           expect(lengthAnnotation.invalidated).toBe(false);
-          expect(lengthAnnotation.highlighted).toBe(false);
+          expect(lengthAnnotation.highlighted).toBe(true);
 
           const data = lengthAnnotation.data.cachedStats;
           const targets = Array.from(Object.keys(data));
@@ -500,7 +501,7 @@ describe('LengthTool:', () => {
           expect(lengthAnnotation.metadata.referencedImageId).toBe(imageId1);
           expect(lengthAnnotation.metadata.toolName).toBe(LengthTool.toolName);
           expect(lengthAnnotation.invalidated).toBe(false);
-          expect(lengthAnnotation.highlighted).toBe(false);
+          expect(lengthAnnotation.highlighted).toBe(true);
 
           const data = lengthAnnotation.data.cachedStats;
           const targets = Array.from(Object.keys(data));
@@ -578,7 +579,7 @@ describe('LengthTool:', () => {
         document.dispatchEvent(evt);
 
         // Mouse down on the middle of the length tool, just to select
-        evt = new MouseEvent('mousedown', {
+        const mouseDownEvt = new MouseEvent('mousedown', {
           target: element,
           buttons: 1,
           clientX: clientX3,
@@ -586,13 +587,15 @@ describe('LengthTool:', () => {
           pageX: pageX3,
           pageY: pageY3,
         });
-        element.dispatchEvent(evt);
-
         // Just grab and don't really move it
-        evt = new MouseEvent('mouseup');
+        const mouseUpEvt = new MouseEvent('mouseup');
 
-        addEventListenerForAnnotationRendered();
-        document.dispatchEvent(evt);
+        performMouseDownAndUp(
+          element,
+          mouseDownEvt,
+          mouseUpEvt,
+          addEventListenerForAnnotationRendered
+        );
       });
 
       this.stackToolGroup.addViewport(vp.id, this.renderingEngine.id);
@@ -1139,7 +1142,7 @@ describe('LengthTool:', () => {
         const lengthAnnotation = lengthAnnotations[0]
         expect(lengthAnnotation.metadata.toolName).toBe(LengthTool.toolName)
         expect(lengthAnnotation.invalidated).toBe(false)
-        expect(lengthAnnotation.highlighted).toBe(false)
+        expect(lengthAnnotation.highlighted).toBe(true)
 
         const data = lengthAnnotation.data.cachedStats
         const targets = Array.from(Object.keys(data))

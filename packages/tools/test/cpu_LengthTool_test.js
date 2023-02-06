@@ -1,6 +1,7 @@
 import * as cornerstone3D from '@cornerstonejs/core';
 import * as csTools3d from '../src/index';
 import * as testUtils from '../../../utils/test/testUtils';
+import { performMouseDownAndUp } from '../../../utils/test/testUtilsMouseEvents';
 
 const {
   cache,
@@ -250,7 +251,7 @@ describe('Length Tool (CPU):', () => {
         expect(lengthAnnotation.metadata.referencedImageId).toBe(imageId1);
         expect(lengthAnnotation.metadata.toolName).toBe(LengthTool.toolName);
         expect(lengthAnnotation.invalidated).toBe(false);
-        expect(lengthAnnotation.highlighted).toBe(false);
+        expect(lengthAnnotation.highlighted).toBe(true);
 
         const data = lengthAnnotation.data.cachedStats;
         const targets = Array.from(Object.keys(data));
@@ -391,7 +392,7 @@ describe('Length Tool (CPU):', () => {
         expect(lengthAnnotation.metadata.referencedImageId).toBe(imageId1);
         expect(lengthAnnotation.metadata.toolName).toBe(LengthTool.toolName);
         expect(lengthAnnotation.invalidated).toBe(false);
-        expect(lengthAnnotation.highlighted).toBe(false);
+        expect(lengthAnnotation.highlighted).toBe(true);
 
         const data = lengthAnnotation.data.cachedStats;
         const targets = Array.from(Object.keys(data));
@@ -477,13 +478,16 @@ describe('Length Tool (CPU):', () => {
         pageX: pageX3,
         pageY: pageY3,
       });
-      element.dispatchEvent(evt);
 
       // Just grab and don't really move it
-      evt = new MouseEvent('mouseup');
+      const mouseUpEvt = new MouseEvent('mouseup');
 
-      addEventListenerForAnnotationRendered();
-      document.dispatchEvent(evt);
+      performMouseDownAndUp(
+        element,
+        evt,
+        mouseUpEvt,
+        addEventListenerForAnnotationRendered
+      );
     });
 
     this.stackToolGroup.addViewport(vp.id, this.renderingEngine.id);

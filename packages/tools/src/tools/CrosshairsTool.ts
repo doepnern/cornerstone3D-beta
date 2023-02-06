@@ -31,7 +31,7 @@ import {
   resetElementCursor,
   hideElementCursor,
 } from '../cursors/elementCursor';
-import { math } from '../utilities';
+import liangBarksyClip from '../utilities/math/vec2/liangBarksyClip';
 import vtkMath from '@kitware/vtk.js/Common/Core/Math';
 import vtkMatrixBuilder from '@kitware/vtk.js/Common/Core/MatrixBuilder';
 import * as lineSegment from '../utilities/math/line';
@@ -51,7 +51,6 @@ import { MouseDragEventType } from '../types/EventTypes';
 import { CONSTANTS } from '@cornerstonejs/core';
 
 const { RENDERING_DEFAULTS } = CONSTANTS;
-const { liangBarksyClip } = math.vec2;
 
 // TODO: nested config is weird
 interface ToolConfiguration {
@@ -274,6 +273,33 @@ class CrosshairsTool extends AnnotationTool {
     const viewportsInfo = this._getViewportsInfo();
 
     this._unsubscribeToViewportNewVolumeSet(viewportsInfo);
+
+    // Crosshairs annotations in the state
+    // has no value when the tool is disabled
+    // since viewports can change (zoom, pan, scroll)
+    // between disabled and enabled/active states.
+    // so we just remove the annotations from the state
+    viewportsInfo.forEach(({ renderingEngineId, viewportId }) => {
+      const enabledElement = getEnabledElementByIds(
+        viewportId,
+        renderingEngineId
+      );
+
+      if (!enabledElement) {
+        return;
+      }
+
+      const { viewport } = enabledElement;
+      const { element } = viewport;
+
+      const annotations = getAnnotations(element, this.getToolName());
+
+      if (annotations?.length) {
+        annotations.forEach((annotation) => {
+          removeAnnotation(annotation.annotationUID, element);
+        });
+      }
+    });
   }
 
   /**
@@ -350,8 +376,7 @@ class CrosshairsTool extends AnnotationTool {
    * @returns Crosshairs annotation
    */
   addNewAnnotation = (
-    evt: EventTypes.MouseDownActivateEventType,
-    interactionType: string
+    evt: EventTypes.InteractionEventType
   ): CrosshairsAnnotation => {
     const eventDetail = evt.detail;
     const { element } = eventDetail;
@@ -452,10 +477,8 @@ class CrosshairsTool extends AnnotationTool {
   }
 
   handleSelectedCallback = (
-    evt: EventTypes.MouseDownEventType,
-    annotation: Annotation,
-    handle: ToolHandle,
-    interactionType = 'mouse'
+    evt: EventTypes.InteractionEventType,
+    annotation: Annotation
   ): void => {
     const eventDetail = evt.detail;
     const { element } = eventDetail;
@@ -499,7 +522,7 @@ class CrosshairsTool extends AnnotationTool {
   };
 
   toolSelectedCallback = (
-    evt: EventTypes.MouseDownEventType,
+    evt: EventTypes.InteractionEventType,
     annotation: Annotation,
     interactionType: InteractionTypes
   ): void => {
@@ -657,7 +680,7 @@ class CrosshairsTool extends AnnotationTool {
           ? [...data.activeViewportIds]
           : [];
 
-      // This init are necessary, because when we move the mouse they are not cleaned by _mouseUpCallback
+      // This init are necessary, because when we move the mouse they are not cleaned by _endCallback
       data.activeViewportIds = [];
       data.handles.activeOperation = null;
 
@@ -1881,32 +1904,31 @@ class CrosshairsTool extends AnnotationTool {
   _activateModify = (element) => {
     state.isInteractingWithTool = true;
 
-    element.addEventListener(Events.MOUSE_UP, this._mouseUpCallback);
-    element.addEventListener(Events.MOUSE_DRAG, this._mouseDragCallback);
-    element.addEventListener(Events.MOUSE_CLICK, this._mouseUpCallback);
+    element.addEventListener(Events.MOUSE_UP, this._endCallback);
+    element.addEventListener(Events.MOUSE_DRAG, this._dragCallback);
+    element.addEventListener(Events.MOUSE_CLICK, this._endCallback);
 
-    // element.addEventListener(Events.TOUCH_END, this._mouseUpCallback)
-    // element.addEventListener(Events.TOUCH_DRAG, this._mouseDragCallback)
+    element.addEventListener(Events.TOUCH_END, this._endCallback);
+    element.addEventListener(Events.TOUCH_DRAG, this._dragCallback);
+    element.addEventListener(Events.TOUCH_TAP, this._endCallback);
   };
 
   _deactivateModify = (element) => {
     state.isInteractingWithTool = false;
 
-    element.removeEventListener(Events.MOUSE_UP, this._mouseUpCallback);
-    element.removeEventListener(Events.MOUSE_DRAG, this._mouseDragCallback);
-    element.removeEventListener(Events.MOUSE_CLICK, this._mouseUpCallback);
+    element.removeEventListener(Events.MOUSE_UP, this._endCallback);
+    element.removeEventListener(Events.MOUSE_DRAG, this._dragCallback);
+    element.removeEventListener(Events.MOUSE_CLICK, this._endCallback);
 
-    // element.removeEventListener(Events.TOUCH_END, this._mouseUpCallback)
-    // element.removeEventListener(Events.TOUCH_DRAG, this._mouseDragCallback)
+    element.removeEventListener(Events.TOUCH_END, this._endCallback);
+    element.removeEventListener(Events.TOUCH_DRAG, this._dragCallback);
+    element.removeEventListener(Events.TOUCH_TAP, this._endCallback);
   };
 
-  _mouseUpCallback = (
-    evt: EventTypes.MouseUpEventType | EventTypes.MouseClickEventType
-  ) => {
+  _endCallback = (evt: EventTypes.InteractionEventType) => {
     const eventDetail = evt.detail;
     const { element } = eventDetail;
 
-    this.editData.annotation.highlighted = false;
     this.editData.annotation.data.handles.activeOperation = null;
     this.editData.annotation.data.activeViewportIds = [];
 
@@ -1929,7 +1951,7 @@ class CrosshairsTool extends AnnotationTool {
     triggerAnnotationRenderForViewportIds(renderingEngine, viewportIdsToRender);
   };
 
-  _mouseDragCallback = (evt: MouseDragEventType) => {
+  _dragCallback = (evt: EventTypes.InteractionEventType) => {
     const eventDetail = evt.detail;
     const delta = eventDetail.deltaPoints.world;
 

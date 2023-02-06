@@ -53,10 +53,11 @@ class AnnotationRenderingEngine {
     // delete element from needsRender if element exist
     this._needsRender.delete(element);
 
-    // Reset the request animation frame if no enabled elements
-    if (this._viewportElements.size === 0) {
-      this._reset();
-    }
+    // I don' think there is any disadvantage to canceling the animation frame
+    // and resetting the flags on viewport's element removal, since the removeVIewportElement
+    // might be as a result of reEnabling the element (in re-enable we disable first), hence the need to render the
+    // new one while removing the old one
+    this._reset();
   }
 
   /**
@@ -103,6 +104,16 @@ class AnnotationRenderingEngine {
       return;
     }
   };
+
+  private _setAllViewportsToBeRenderedNextFrame() {
+    const elements = [...this._viewportElements.values()];
+
+    elements.forEach((element) => {
+      this._needsRender.add(element);
+    });
+
+    this._renderFlaggedViewports();
+  }
 
   private _setViewportsToBeRenderedNextFrame(elements: HTMLDivElement[]) {
     const elementsEnabled = [...this._viewportElements.values()];
@@ -204,6 +215,8 @@ class AnnotationRenderingEngine {
     this._needsRender.clear();
     this._animationFrameSet = false;
     this._animationFrameHandle = null;
+
+    this._setAllViewportsToBeRenderedNextFrame();
   }
 }
 

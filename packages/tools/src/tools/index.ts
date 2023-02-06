@@ -20,8 +20,10 @@ import EllipticalROITool from './annotation/EllipticalROITool';
 import PlanarFreehandROITool from './annotation/PlanarFreehandROITool';
 import ArrowAnnotateTool from './annotation/ArrowAnnotateTool';
 import AngleTool from './annotation/AngleTool';
+import CobbAngleTool from './annotation/CobbAngleTool';
 import ReferenceCursors from './ReferenceCursors';
 import ReferenceLines from './ReferenceLinesTool';
+import ScaleOverlayTool from './ScaleOverlayTool';
 
 // Segmentation DisplayTool
 import SegmentationDisplayTool from './displayTools/SegmentationDisplayTool';
@@ -33,6 +35,7 @@ import SphereScissorsTool from './segmentation/SphereScissorsTool';
 import RectangleROIThresholdTool from './segmentation/RectangleROIThresholdTool';
 import RectangleROIStartEndThresholdTool from './segmentation/RectangleROIStartEndThresholdTool';
 import BrushTool from './segmentation/BrushTool';
+import PaintFillTool from './segmentation/PaintFillTool';
 
 export {
   // ~~ BASE
@@ -59,6 +62,7 @@ export {
   PlanarFreehandROITool,
   ArrowAnnotateTool,
   AngleTool,
+  CobbAngleTool,
   ReferenceCursors,
   // Segmentations Display
   SegmentationDisplayTool,
@@ -71,4 +75,6 @@ export {
   BrushTool,
   MagnifyTool,
   ReferenceLines,
+  PaintFillTool,
+  ScaleOverlayTool,
 };

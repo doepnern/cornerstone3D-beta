@@ -5,6 +5,7 @@ import { triggerEvent, uuidv4 } from '../utilities';
 import { vtkOffscreenMultiRenderWindow } from './vtkClasses';
 import ViewportType from '../enums/ViewportType';
 import VolumeViewport from './VolumeViewport';
+import BaseVolumeViewport from './BaseVolumeViewport';
 import StackViewport from './StackViewport';
 import viewportTypeUsesCustomRenderingPipeline from './helpers/viewportTypeUsesCustomRenderingPipeline';
 import getOrCreateCanvas from './helpers/getOrCreateCanvas';
@@ -20,6 +21,7 @@ import type {
   NormalizedViewportInput,
 } from '../types/IViewport';
 import { OrientationAxis } from '../enums';
+import VolumeViewport3D from './VolumeViewport3D';
 
 type ViewportDisplayCoords = {
   sxStartDisplayCoords: number;
@@ -210,6 +212,7 @@ class RenderingEngine implements IRenderingEngine {
 
     // 5. Remove the requested viewport from the rendering engine
     this._removeViewport(viewportId);
+    viewport.isDisabled = true;
 
     // 6. Avoid rendering for the disabled viewport
     this._needsRender.delete(viewportId);
@@ -379,8 +382,8 @@ class RenderingEngine implements IRenderingEngine {
 
     const isVolumeViewport = (
       viewport: IStackViewport | IVolumeViewport
-    ): viewport is VolumeViewport => {
-      return viewport instanceof VolumeViewport;
+    ): viewport is BaseVolumeViewport => {
+      return viewport instanceof BaseVolumeViewport;
     };
 
     return viewports.filter(isVolumeViewport);
@@ -577,6 +580,12 @@ class RenderingEngine implements IRenderingEngine {
 
     // 3. Reset viewport cameras
     vtkDrivenViewports.forEach((vp: IStackViewport | IVolumeViewport) => {
+      const canvas = getOrCreateCanvas(vp.element);
+      const rect = canvas.getBoundingClientRect();
+      const devicePixelRatio = window.devicePixelRatio || 1;
+      canvas.width = rect.width * devicePixelRatio;
+      canvas.height = rect.height * devicePixelRatio;
+
       const prevCamera = vp.getCamera();
       vp.resetCamera();
 
@@ -742,6 +751,8 @@ class RenderingEngine implements IRenderingEngine {
     ) {
       // 4.b Create a volume viewport
       viewport = new VolumeViewport(viewportInput);
+    } else if (type === ViewportType.VOLUME_3D) {
+      viewport = new VolumeViewport3D(viewportInput);
     } else {
       throw new Error(`Viewport Type ${type} is not supported`);
     }
