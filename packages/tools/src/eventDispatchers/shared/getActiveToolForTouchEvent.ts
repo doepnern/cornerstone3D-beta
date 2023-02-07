@@ -53,7 +53,8 @@ export default function getActiveToolForTouchEvent(
         (binding) =>
           (binding.numTouchPoints === numTouchPoints ||
             (numTouchPoints === 1 &&
-              binding.mouseButton === MouseBindings.Primary)) &&
+              binding.mouseButton === MouseBindings.Primary &&
+              binding.numTouchPoints !== 0)) &&
           binding.modifierKey === modifierKey
       );
 
