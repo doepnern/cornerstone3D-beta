@@ -707,6 +707,7 @@ interface IImage {
         lastRenderTime?: number;
     };
     voiLUT?: CPUFallbackLUT;
+    voiLUTFunction: string;
     width: number;
     windowCenter: number[] | number;
     windowWidth: number[] | number;
@@ -1015,6 +1016,7 @@ interface IViewport {
     getPan(): Point2;
     getRenderer(): void;
     getRenderingEngine(): any;
+    getRotation: () => number;
     getZoom(): number;
     id: string;
     isDisabled: boolean;
@@ -1114,8 +1116,7 @@ interface IVolumeViewport extends IViewport {
     getFrameOfReferenceUID: () => string;
     getImageData(volumeId?: string): IImageData | undefined;
     getIntensityFromWorld(point: Point3): number;
-    // (undocumented)
-    getProperties: () => any;
+    getProperties: () => VolumeViewportProperties;
     getSlabThickness(): number;
     hasImageURI: (imageURI: string) => boolean;
     hasVolumeId: (volumeId: string) => boolean;
@@ -1180,6 +1181,7 @@ type Metadata = {
     Columns: number;
     Rows: number;
     voiLut: Array<VOI>;
+    VOILUTFunction: string;
 };
 
 // @public (undocumented)
@@ -1298,6 +1300,7 @@ type StackViewportNewStackEventDetail = {
 // @public
 type StackViewportProperties = {
     voiRange?: VOIRange;
+    VOILUTFunction?: VOILUTFunctionType;
     invert?: boolean;
     interpolationType?: InterpolationType;
     rotation?: number;
@@ -1411,6 +1414,15 @@ type VOI = {
 };
 
 // @public
+enum VOILUTFunctionType {
+    // (undocumented)
+    LINEAR = 'LINEAR',
+    // (undocumented)
+    SAMPLED_SIGMOID = 'SIGMOID', // SIGMOID is sampled in 1024 even steps so we call it SAMPLED_SIGMOID
+    // EXACT_LINEAR = 'EXACT_LINEAR', TODO: Add EXACT_LINEAR option from DICOM NEMA
+}
+
+// @public
 type VoiModifiedEvent = CustomEvent_2<VoiModifiedEventDetail>;
 
 // @public
@@ -1418,6 +1430,7 @@ type VoiModifiedEventDetail = {
     viewportId: string;
     range: VOIRange;
     volumeId?: string;
+    VOILUTFunction?: VOILUTFunctionType;
 };
 
 // @public (undocumented)
@@ -1494,6 +1507,7 @@ type VolumeNewImageEventDetail = {
 // @public
 type VolumeViewportProperties = {
     voiRange?: VOIRange;
+    VOILUTFunction?: VOILUTFunctionType;
 };
 
 // (No @packageDocumentation comment for this package)
